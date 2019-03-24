@@ -1,0 +1,91 @@
+#!/bin/sh
+# 檢查 現在日期/現在小時 目錄是否已存在，不存在則建立，檔案流水編號歸 0
+# 檢查已存在的 現在日期/現在小時 目錄內是否已有複製的 log，
+# 並檢查已複製 log 檔案流水編號，以產生要新增的 log 檔案流水編號
+# /shared/tmp/crmrotate.pcap001 時間戳記異動，
+# 表示 /shared/tmp/crmrotate.pcap000 已完成
+# 監看 /shared/tmp/crmrotate.pcap001 時間戳記是否異動，
+# 如果異動則複製到 現在日期/現在小時 目錄，並改檔名加流水編號
+#. date: 2019-03-23
+
+# 監看檔
+watch_file="/shared/tmp/crmrotate.pcap001"
+
+# 新目錄根路徑
+destination_dir_part="/shared/tmp/log"
+
+# 檔案流水編號
+declare -i number
+
+while [ True ] ; do
+
+# 新目錄完整路徑
+  destination_dir="${destination_dir_part}/$(date +%Y%m%d)/$(date +%H)"
+
+# 檢查本 script 是否已 mkdir
+  if [ "${destination_dir}" != "${new_dir}" ] ; then
+    new_dir=${destination_dir}
+
+# 檢查 現在日期/現在小時 目錄是否已存在
+    if [ -d "${destination_dir}" ] ; then
+
+# 現在日期/現在小時 目錄已存在，是否找得到檔案
+      ls -t ${destination_dir}/crmrotate.pcap.* > /dev/null 2>&1
+      test_=$?
+
+# 找得到檔案
+      if [ "${test_}" == "0" ] ; then
+
+# 檢查已複製 log 檔案流水編號
+        number_t=$(ls -t ${destination_dir}/crmrotate.pcap.* | head -1 | awk -F. '{print $3}')
+
+# 3位數
+        if [ ${number_t:0:2} == "00" ] ; then
+
+# 00? 取最後 1 位數 +1 為下個新複檔案流水編號
+          number=${number_t:2}+1
+        elif [ ${number_t:0:1} == "0" ] ; then
+
+# 0?? 取最後 2 位數 +1 為下個新複檔案流水編號
+          number=${number_t:1}+1
+
+        else
+
+# ??? 全取 +1 為下個新複檔案流水編號
+          number=${number_t}+1
+        fi
+
+# 現在日期/現在小時 目錄已存在，找不到檔案，檔案流水編號歸 0
+      else
+        number=0
+      fi
+    else
+
+# 現在日期/現在小時 目錄不存在則建立，檔案流水編號歸 0
+      mkdir -p ${destination_dir}
+      number=0
+    fi
+  fi
+
+  time_stamp_001=$(ls -l --time-style=full-iso ${watch_file} | awk '{print $7}')
+  if [ "${time_stamp_001}" != "${printed}" ] ; then
+    printed=${time_stamp_001}
+
+# 檔案流水編號 不足3位數，前方補 0
+    if [ "${#number}" -eq 1 ] ; then
+      rotate_number="00${number}"
+    elif [ "${#number}" -eq 2 ] ; then
+      rotate_number="0${number}"
+    else
+      rotate_number="${number}"
+    fi
+
+# 目的檔案加流水編號
+    destination_file="crmrotate.pcap.${rotate_number}"
+    echo ${watch_file} ${destination_dir}/${destination_file}
+    /bin/cp ${watch_file} ${destination_dir}/${destination_file}
+    number=${number}+1
+
+  fi
+  sleep 1
+done

@@ -1,0 +1,22 @@
+#!/bin/sh
+
+destination_dir="/shared/tmp"
+[ -d "${destination_dir}" ] || mkdir -p ${destination_dir}
+
+while [ True ] ; do
+  # 檔案流水編號 000~199
+  for (( number=0 ; number<=199 ; number=number+1 )) ; do
+    if [ "${#number}" -eq 1 ] ; then
+      rotate_number="00${number}"
+    elif [ "${#number}" -eq 2 ] ; then
+      rotate_number="0${number}"
+    else
+      rotate_number="${number}"
+    fi
+    file_name="${destination_dir}/crmrotate.pcap${rotate_number}"
+
+    # 每 10 秒寫入有流水編號的新檔案
+    echo "${RANDOM}" > ${file_name}
+    sleep 1
+  done
+done
