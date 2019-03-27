@@ -1,8 +1,10 @@
-### watch_log.sh
+﻿### watch_log.sh
 ```
 監視新的 log 檔，
-建立 現在日期/現在小時 目錄，以複製當小時的 log ，
-複製並重命檔名 加上每小時的流水編號
+建立 現在日期/現在小時 目錄，以複製當小時的 log，
+在背景複製並重命檔名 加上每小時的流水編號，
+產生本 script 執行 log 於同路徑 log_watchlog.txt
+
 ```
 ---
 ### generate_log1.sh

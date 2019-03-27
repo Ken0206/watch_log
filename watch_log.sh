@@ -2,6 +2,7 @@
 #. date: 2019-03-24
 destination_dir_part="/shared/tmp/log"
 [ -d ${destination_dir_part} ] || mkdir -p ${destination_dir_part}
+log_file="${0%/*}/log_watch_log.txt"
 declare -i number
 while [ True ] ; do
   destination_dir="${destination_dir_part}/$(date +%Y%m%d)/$(date +%H)"
@@ -32,8 +33,8 @@ while [ True ] ; do
       rotate_number="${number}"
     fi
     destination_file="crmrotate.pcap.${rotate_number}"
-    echo ${file_name} ${destination_dir}/${destination_file}
-    /bin/cp ${file_name} ${destination_dir}/${destination_file}
+    echo "$(date +%Y/%m/%d" "%H:%M:%S) cp ${file_name} ${destination_dir}/${destination_file}" | tee -a ${log_file}
+    /bin/cp ${file_name} ${destination_dir}/${destination_file} &
     number=${number}+1
   fi
   sleep 1

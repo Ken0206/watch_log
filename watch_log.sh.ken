@@ -10,6 +10,9 @@
 destination_dir_part="/shared/tmp/log"
 [ -d ${destination_dir_part} ] || mkdir -p ${destination_dir_part}
 
+# log 檔
+log_file="${0%/*}/log_watch_log.txt"
+
 # 檔案流水編號
 declare -i number
 
@@ -70,8 +73,8 @@ while [ True ] ; do
 
 # 目的檔案加流水編號
     destination_file="crmrotate.pcap.${rotate_number}"
-    echo ${file_name} ${destination_dir}/${destination_file}
-    /bin/cp ${file_name} ${destination_dir}/${destination_file}
+    echo "$(date +%Y/%m/%d" "%H:%M:%S) cp ${file_name} ${destination_dir}/${destination_file}" | tee -a ${log_file}
+    /bin/cp ${file_name} ${destination_dir}/${destination_file} &
     number=${number}+1
 
   fi
