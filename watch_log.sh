@@ -1,5 +1,5 @@
 #!/bin/sh
-#. date: 2019-03-24
+#. date: 2019-03-27
 destination_dir_part="/shared/tmp/log"
 [ -d ${destination_dir_part} ] || mkdir -p ${destination_dir_part}
 log_file="${0%/*}/log_watch_log.txt"
