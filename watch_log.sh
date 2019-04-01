@@ -42,8 +42,7 @@ while [ True ] ; do
     tail -526000 ${log_file} > ${tmp_log}
     cat ${tmp_log} > ${log_file}
     rm -f ${tmp_log}
-    echo "$(date +%Y/%m/%d" "%H:%M:%S) Reduce ${log_file}" >> ${log_file}
-    echo "$(date +%Y/%m/%d" "%H:%M:%S) Reduce ${log_file}"
+    echo "$(date +%Y/%m/%d" "%H:%M:%S) Reduce ${log_file}" | tee -a ${log_file}
   fi
   sleep 1
 done
