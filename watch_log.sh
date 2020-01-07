@@ -1,8 +1,7 @@
 #!/bin/sh
-#date: 2019-04-1
+#. date: 2019-03-24
 destination_dir_part="/shared/tmp/log"
 [ -d ${destination_dir_part} ] || mkdir -p ${destination_dir_part}
-log_file="${0%/*}/log_watch_log.txt"
 declare -i number
 while [ True ] ; do
   destination_dir="${destination_dir_part}/$(date +%Y%m%d)/$(date +%H)"
@@ -33,16 +32,9 @@ while [ True ] ; do
       rotate_number="${number}"
     fi
     destination_file="crmrotate.pcap.${rotate_number}"
-    echo "$(date +%Y/%m/%d" "%H:%M:%S) cp ${file_name} ${destination_dir}/${destination_file}" | tee -a ${log_file}
-    /bin/cp ${file_name} ${destination_dir}/${destination_file} &
+    echo ${file_name} ${destination_dir}/${destination_file}
+    /bin/cp ${file_name} ${destination_dir}/${destination_file}
     number=${number}+1
-  fi
-  if [ $(ls -l ${log_file} | awk '{print $5}') -gt 104857600 ] ; then
-    tmp_log="${0%/*}/${RANDOM}_temp"
-    tail -526000 ${log_file} > ${tmp_log}
-    cat ${tmp_log} > ${log_file}
-    rm -f ${tmp_log}
-    echo "$(date +%Y/%m/%d" "%H:%M:%S) Reduce ${log_file}" | tee -a ${log_file}
   fi
   sleep 1
 done

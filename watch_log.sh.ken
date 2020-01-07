@@ -4,66 +4,62 @@
 # 並檢查已複製 log 檔案流水編號，以產生要新增的 log 檔案流水編號
 # 監看 log 是否已產生，為第二新的檔案，
 # 複製到 現在日期/現在小時 目錄，並改檔名加流水編號
-# log 檔如大於 100M 則只留下 526000 行，約 50M
-#date: 2019-04-1
+#. date: 2019-03-24
 
 # 新目錄根路徑
 destination_dir_part="/shared/tmp/log"
 [ -d ${destination_dir_part} ] || mkdir -p ${destination_dir_part}
-
-# log 檔
-log_file="${0%/*}/log_watch_log.txt"
 
 # 檔案流水編號
 declare -i number
 
 while [ True ] ; do
 
-  # 新目錄完整路徑
+# 新目錄完整路徑
   destination_dir="${destination_dir_part}/$(date +%Y%m%d)/$(date +%H)"
 
-  # 檢查本 script 是否已 mkdir
+# 檢查本 script 是否已 mkdir
   if [ "${destination_dir}" != "${new_dir}" ] ; then
     new_dir=${destination_dir}
 
-    # 檢查 現在日期/現在小時 目錄是否已存在
+# 檢查 現在日期/現在小時 目錄是否已存在
     if [ -d "${destination_dir}" ] ; then
 
-      # 檢查已複製 log 檔案流水編號
+# 檢查已複製 log 檔案流水編號
       number_t=$(ls -t ${destination_dir}/crmrotate.pcap.* | head -1 | awk -F. '{print $3}')
 
-      # 3位數
+# 3位數
       if [ ${number_t:0:2} == "00" ] ; then
 
-        # 00? 取最後 1 位數 +1 為下個新複檔案流水編號
+# 00? 取最後 1 位數 +1 為下個新複檔案流水編號
         number=${number_t:2}+1
       elif [ ${number_t:0:1} == "0" ] ; then
 
-        # 0?? 取最後 2 位數 +1 為下個新複檔案流水編號
+# 0?? 取最後 2 位數 +1 為下個新複檔案流水編號
         number=${number_t:1}+1
       else
 
-        # ??? 全取 +1 為下個新複檔案流水編號
+# ??? 全取 +1 為下個新複檔案流水編號
         number=${number_t}+1
       fi
     else
 
-      # 現在日期/現在小時 目錄不存在則建立，檔案流水編號歸 0
+# 現在日期/現在小時 目錄不存在則建立，檔案流水編號歸 0
       mkdir -p ${destination_dir}
       number=0
     fi
   fi
 
-  # 監看 log 是否已產生，為第二新的檔案
+# 監看 log 是否已產生，為第二新的檔案
   file_name=$(ls -tr /shared/tmp/crmrotate.pcap* | tail -2 | head -1)
 
-  # 檢查本 script 是否已複製過新的檔案
+# 檢查本 script 是否已複製過新的檔案
   if [ "${file_name}" != "${copied_file}" ] ; then
 
-    # 已複製旗標
+# 已複製旗標
     copied_file=${file_name}
 
-    # 檔案流水編號 不足3位數，前方補 0
+# 檔案流水編號 不足3位數，前方補 0
     if [ "${#number}" -eq 1 ] ; then
       rotate_number="00${number}"
     elif [ "${#number}" -eq 2 ] ; then
@@ -72,24 +68,15 @@ while [ True ] ; do
       rotate_number="${number}"
     fi
 
-    # 目的檔案加流水編號
+# 目的檔案加流水編號
     destination_file="crmrotate.pcap.${rotate_number}"
-    echo "$(date +%Y/%m/%d" "%H:%M:%S) cp ${file_name} ${destination_dir}/${destination_file}" | tee -a ${log_file}
-    /bin/cp ${file_name} ${destination_dir}/${destination_file} &
+    echo ${file_name} ${destination_dir}/${destination_file}
+    /bin/cp ${file_name} ${destination_dir}/${destination_file}
     number=${number}+1
 
   fi
 
-  # log 檔如大於 100M 則只留下 526000 行，約 50M
-  if [ $(ls -l ${log_file} | awk '{print $5}') -gt 104857600 ] ; then
-    tmp_log="${0%/*}/${RANDOM}_temp"
-    tail -526000 ${log_file} > ${tmp_log}
-    cat ${tmp_log} > ${log_file}
-    rm -f ${tmp_log}
-    echo "$(date +%Y/%m/%d" "%H:%M:%S) Reduce ${log_file}" | tee -a ${log_file}
-  fi
-
-  # 等一秒
+# 每秒檢查一次
   sleep 1
 done
 
